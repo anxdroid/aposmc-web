@@ -21,10 +21,6 @@ class MyDB extends SQLite3
     if (isset($_GET["numSamples"]) && (1*$_GET["numSamples"] > 0)) {
             $numSamples = 1*$_GET["numSamples"];
     }
-        $from = date("Y-m-d")." 00:00:00";
-        if (isset($_GET["from"]) && ($_GET["from"] != "")) {
-                $from = urldecode($_GET["from"]);
-        }
 	$compress = false;
 	if (isset($_GET["compress"]) && (1*$_GET["compress"] >= 0)) {
 		$compress = (1*$_GET["compress"] == 1);
@@ -38,18 +34,13 @@ class MyDB extends SQLite3
 /* Temperature query
 /***************************/
 
-        $sql["sensors"] = "SELECT value, datetime(timestamp, 'localtime') timestamp, source, unit FROM sensors 
-WHERE value >= 0 AND source = '".$source."' 
-AND datetime(timestamp, 'localtime') > '".$from."'
-AND (timestamp like '____-__-__ __:_0:__' OR cast( ( strftime('%s',datetime('now'))-strftime('%s',timestamp) ) AS real ) < 10)";
+        $sql["sensors"] = "SELECT value, datetime(timestamp, 'localtime') timestamp, source, unit FROM sensors WHERE value >= 0 AND source = '".$source."'";
 
         $sql["sensors"] .= " ORDER BY timestamp DESC";
 
         if ($numSamples > 0) {
                 $sql["sensors"] .= " LIMIT 0, ".$numSamples;
         }
-
-	$sql["sensors"] = "SELECT * FROM (".$sql["sensors"].") ORDER BY timestamp ASC";
 
 /***************************/
 /* Events query
@@ -76,11 +67,10 @@ AND (timestamp like '____-__-__ __:_0:__' OR cast( ( strftime('%s',datetime('now
         //echo $sql;
 		$result = $db->query($sql);
 	        $info = array();
-	        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        	        //$info[strtotime($row["timestamp"])] = $row;
-			$info[] = $row;
+	        while ($row = $result->fetchArray()) {
+        	        $info[strtotime($row["timestamp"])] = $row;
 	        }
-        	$info = json_encode(array("data" => $info));
+        	$info = json_encode($info);
 	        echo ($compress) ? gzcompress($info) : $info;
 	}
 ?>
