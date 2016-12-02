@@ -15,7 +15,7 @@ class MyDB extends SQLite3
 /***************************/
 /* INIT
 /***************************/
-
+	$compress = false;
     $db = new MyDB();
     $cmd = "";
         if (isset($_GET["cmd"]) && ($_GET["cmd"] != "")) {
