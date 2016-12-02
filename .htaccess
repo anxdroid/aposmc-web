@@ -1,0 +1,9 @@
+	AuthType Basic
+        AuthName "ap"
+        AuthBasicProvider dbd
+
+        #AuthnCacheProvideFor dbd
+        #AuthnCacheContext my-server
+
+        Require valid-user
+        #AuthDBDUserPWQuery "SELECT password FROM users WHERE username = %s"
