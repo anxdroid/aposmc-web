@@ -49,7 +49,7 @@ error_reporting(E_ALL);
 
 	$sql = "SELECT value, timestamp, unit
 		FROM sensors
-		WHERE value >= 0
+		WHERE value IS NOT NULL
 		AND source = '".$source."'";
 	if ($from !== null) {
 		$sql .= " AND timestamp >= '".$from." 00:00:00'";
@@ -70,10 +70,10 @@ error_reporting(E_ALL);
 
 	$sql = "SELECT source, MAX(timestamp) timestamp
 		FROM sensors
-		WHERE value >= 0
+		WHERE value IS NOT NULL
 		GROUP BY source";
 
-	//echo $sql."<hr />";
+	echo $sql."<hr />";
 	$sourcesResult = $db->query($sql);
 	$sources = array();
 	while($row = $sourcesResult->fetch_array(MYSQLI_ASSOC)) {
@@ -85,14 +85,14 @@ error_reporting(E_ALL);
 /* Events query
 /***************************/
 
-	$sql = "SELECT e.*, timestamp FROM events e WHERE (category='CMDSRV' OR category = 'JOBSRV') AND key='RELAY'";
+	$sql = "SELECT e.* FROM events e WHERE (category='CMDSRV' OR category = 'JOBSRV') AND key='RELAY'";
 	if ($from !== null) {
 		$sql .= " AND timestamp >= '".$from." 00:00:00'";
 	}
 
 	$sql .= " ORDER BY timestamp DESC";
 
-	//echo $sql."<hr />";
+	echo $sql."<hr />";
 	$evResult = $db->query($sql);
 	$events = array();
 	while($evResult !== false && $row = $evResult->fetch_array(MYSQLI_ASSOC)) {
@@ -247,7 +247,7 @@ error_reporting(E_ALL);
 /***************************/
 /* Process info
 /***************************/
-
+/*
 	$ps = array();
 	exec("ps aux | grep -i \"sudo python test_sensors.py\" | grep -v grep", $ps);	
 	//$ps = explode("\n", $cmd);
@@ -261,9 +261,9 @@ error_reporting(E_ALL);
 		echo "Sensors PID: ".$row[1]." started at ".$row[8]."<hr />";
 		break;
 	}
-
+*/
 	$ps = array();
-	exec("ps aux | grep -i \"sudo python test_server.py\" | grep -v grep", $ps);	
+	exec("ps aux | grep -i \"sudo python test_server_mysql.py\" | grep -v grep", $ps);	
 	//$ps = explode("\n", $cmd);
 	//echo print_r($ps, true)."<hr />";
 	//echo $ps[0]."<hr />";
@@ -326,7 +326,7 @@ Sensor
 </td></tr>
 <tr>
 <td>
-Last temperature acquired
+Last value acquired
 </td>
 <td style="font-weight:bold;">
 <?=$lastRow["value"]?><?=$lastRow["unit"]?>
@@ -337,7 +337,7 @@ Last temperature acquired
 </tr>
 <tr>
 <td>
-Today's highest temperature acquired
+Today's highest value acquired
 </td>
 <td>
 <span style="color:red; font-weight:bold;">
@@ -349,7 +349,7 @@ Today's highest temperature acquired
 </tr>
 <tr>
 <td>
-Average temperature
+Average value
 </td>
 <td style="font-weight:bold;">
 <?=round($avgTemp, 3)?><?=$lastRow["unit"]?>
@@ -363,7 +363,7 @@ Average temperature
 </tr>
 <tr>
 <td>
-Today's lowest temperature acquired
+Today's lowest value acquired
 </td>
 <td>
 <span style="color:blue; font-weight:bold;"><?=$minRow["value"]?><?=$minRow["unit"]?></span>
