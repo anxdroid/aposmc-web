@@ -24,7 +24,7 @@ class MyDB extends SQLite3
 	if (isset($_GET["numSamples"]) && (1*$_GET["numSamples"] > 0)) {
 		$numSamples = 1*$_GET["numSamples"];
 	}
-	$avgNum = 100;
+	$avgNum = 10;
 	if (isset($_GET["avgNum"]) && (1*$_GET["avgNum"] > 0)) {
                 $avgNum = 1*$_GET["avgNum"];
         }
@@ -103,7 +103,7 @@ class MyDB extends SQLite3
 	//echo $sql."<hr />";
 	$evResult = $db->query($sql);
 	$events = array();
-	while($row = $evResult->fetchArray()) {
+	while($row = $evResult->fetchArray(SQLITE3_ASSOC)) {
 		$events[strtotime($row["timestamp"])] = $row;
 	}
 	//echo print_r($events, true)."<br />";
@@ -289,7 +289,7 @@ class MyDB extends SQLite3
 Show from
 </td>
 <td colspan="2">
-	<form action="<?=$_SERVER['PHP_SELF']?>?<?=$params?>" id="search" method="get">
+	<form action="<?=$_SERVER['PHP_SELF']?>?<?=isset($params) ? $params : ""?>" id="search" method="get">
 <?php
 	//unset($_GET["source"]);
 	$params = "";
