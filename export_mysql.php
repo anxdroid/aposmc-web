@@ -63,7 +63,7 @@ AND (timestamp like '____-__-__ __:_0:__' OR TIMESTAMPDIFF(SECOND, timestamp, NO
 	$result = null;
 	if (isset($sql[$export])) {
 		$sql = $sql[$export];
-        echo $sql;
+        //echo $sql;
 		$result = $db->query($sql);
 	        $info = array();
 	        while ($result !== false && $row = $result->fetch_array(MYSQLI_ASSOC)) {
