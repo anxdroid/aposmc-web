@@ -41,13 +41,13 @@ AND (timestamp like '____-__-__ __:_0:__' OR TIMESTAMPDIFF(SECOND, timestamp, NO
                 $sql["sensors"] .= " LIMIT 0, ".$numSamples;
         }
 
-	$sql["sensors"] = "SELECT * FROM (".$sql["sensors"].") ORDER BY timestamp ASC";
+	$sql["sensors"] = "SELECT * FROM (".$sql["sensors"].") a ORDER BY timestamp ASC";
 
 /***************************/
 /* Events query
 /***************************/
 
-        $sql["events"] = "SELECT e.*, timestamp FROM events e WHERE key IS NOT NULL ORDER BY timestamp DESC";
+        $sql["events"] = "SELECT e.* FROM events e WHERE key IS NOT NULL ORDER BY timestamp DESC";
         if ($numSamples > 0) {
                 $sql["events"] .= " LIMIT 0, ".$numSamples;
         }
