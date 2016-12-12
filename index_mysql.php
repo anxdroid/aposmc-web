@@ -216,7 +216,7 @@ error_reporting(E_ALL);
 	$area = 0;
 
 	if ($cumulative) {
-		aksort($seriers);
+		ksort($seriers);
 		foreach($series as $ts => $row) {
 			if ($prevVal != null) {
 				$timeDiff = abs(strtotime($ts) - $prevTs);
