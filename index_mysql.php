@@ -130,7 +130,7 @@ error_reporting(E_ALL);
 				$title = $text = "undefined";
                         }elseif ($lastEventTime > strtotime($row["timestamp"]) && isset($events[$evKeys[0]]["MAX"])) {
 				//echo print_r($row, true)." => ".print_r($events[$evKeys[0]], true)."<br />";
-				$title = "'".$events[$evKeys[0]]["category"]." HEATER'";
+				$title = "'".$events[$evKeys[0]]["category"]." HEATERS'";
 				$text = ((1*$events[$evKeys[0]]["value"] == 0 || $events[$evKeys[0]]["value"] == 'ON')  ? "'ON'" : "'OFF'");
 				unset($events[$evKeys[0]]);
 				$evKeys = array_keys($events);
