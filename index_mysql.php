@@ -116,23 +116,10 @@ error_reporting(E_ALL);
 
 
 	$evKeys = array_keys($events);
-	$prevVal = null;
-	$prevTs = null;
-	$area = 0;
-
 	$series = array();
 
 	while($result !== false && $row = $result->fetch_array(MYSQLI_ASSOC)) {
 		$row["value"] = round($row["value"], 3);
-		if ($prevVal != null) {
-			$timeDiff = abs(strtotime($row["timestamp"]) - $prevTs);
-			$area1 = min($row["value"], $prevVal) * $timeDiff;
-			$area2 = abs($row["value"] - $prevVal) * $timeDiff / 2;
-			$area += ($area1 + $area2) / 3600;
-			#echo $row["value"]." prev ".$prevVal."  diff ".$timeDiff." area ".$area1." ".$area2."\n";
-		}		
-		$prevVal = $row["value"];
-		$prevTs = strtotime($row["timestamp"]);	
 
 		$title = $text = "undefined";
 		if (is_array($evKeys) && isset($evKeys[0])) {
@@ -186,11 +173,6 @@ error_reporting(E_ALL);
 		}
 
 		$series[$row["timestamp"]] = array("date" => array($matches[1], $matches[2], $matches[3], $matches[4], $matches[5], $matches[6]), "value" => $row["value"], "title" => $title, "text" => $text);
-		if ($cumulative) {
-			$series[$row["timestamp"]]["cumulative"] = $area;
-			$series[$row["timestamp"]]["title_cumulative"] = "undefined";
-			$series[$row["timestamp"]]["text_cumulative"] = "undefined";		
-		}
 	}
 	$avgTemp /= $avgTempNum;
 
@@ -229,8 +211,28 @@ error_reporting(E_ALL);
             $minRow["timeUnit"] = "hr";
     }
 	
-	ksort($seriers);
-	echo print_r($series, true)."<br />";
+	$prevVal = null;
+	$prevTs = null;
+	$area = 0;
+
+	if ($cumulative) {
+		ksort($seriers);
+		foreach($series as $ts => $row) {
+			if ($prevVal != null) {
+				$timeDiff = abs(strtotime($ts) - $prevTs);
+				$area1 = min($row["value"], $prevVal) * $timeDiff;
+				$area2 = abs($row["value"] - $prevVal) * $timeDiff / 2;
+				$area += ($area1 + $area2) / 3600;
+				#echo $row["value"]." prev ".$prevVal."  diff ".$timeDiff." area ".$area1." ".$area2."\n";
+			}		
+			$prevVal = $row["value"];
+			$prevTs = strtotime($ts);	
+			$series[$row["timestamp"]]["cumulative"] = $area;
+			$series[$row["timestamp"]]["title_cumulative"] = "undefined";
+			$series[$row["timestamp"]]["text_cumulative"] = "undefined";
+		}		
+	}
+	//echo print_r($series, true)."<br />";
 ?>
 <html>
   <head>
