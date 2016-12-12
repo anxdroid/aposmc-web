@@ -559,6 +559,24 @@ Today's lowest value acquired
 <?=$minRow["timestamp"]?> (<?=round($minRow["ago"], 2)?> <?=$minRow["timeUnit"]?> ago)
 </td>
 </tr>
+<?php
+	if ($cumulative) :
+?>
+<tr>
+<td>
+Today's cumulative
+</td>
+<td>
+<span style="color:blue; font-weight:bold;"><?=$area?><?=$minRow["unit"]?>h</span>
+</td>
+<td>
+<?=$lastRow["timestamp"]?> (<?=round($lastRow["ago"], 2)?> <?=$lastRow["timeUnit"]?> ago)
+</td>
+</tr>
+<?php		
+	endif;
+?>
+
 </table>
 
 <!-- <?=$avgNum." ".$numSamples?><br />  style='width: 1280px; height: 1024px;'-->
