@@ -567,7 +567,7 @@ Today's lowest value acquired
 Today's cumulative
 </td>
 <td>
-<span style="color:blue; font-weight:bold;"><?=$area?><?=$minRow["unit"]?>h</span>
+<span style="color:red; font-weight:bold;"><?=round($area, 3)?><?=$minRow["unit"]?>h</span>
 </td>
 <td>
 <?=$lastRow["timestamp"]?> (<?=round($lastRow["ago"], 2)?> <?=$lastRow["timeUnit"]?> ago)
