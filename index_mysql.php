@@ -216,7 +216,7 @@ error_reporting(E_ALL);
 	$area = 0;
 
 	if ($cumulative) {
-		ksort($seriers);
+		aksort($seriers);
 		foreach($series as $ts => $row) {
 			if ($prevVal != null) {
 				$timeDiff = abs(strtotime($ts) - $prevTs);
@@ -224,12 +224,13 @@ error_reporting(E_ALL);
 				$area2 = abs($row["value"] - $prevVal) * $timeDiff / 2;
 				$area += ($area1 + $area2) / 3600;
 				#echo $row["value"]." prev ".$prevVal."  diff ".$timeDiff." area ".$area1." ".$area2."\n";
+				$series[$ts]["cumulative"] = $area;
+				$series[$ts]["title_cumulative"] = "undefined";
+				$series[$ts]["text_cumulative"] = "undefined";
 			}		
 			$prevVal = $row["value"];
 			$prevTs = strtotime($ts);	
-			$series[$row["timestamp"]]["cumulative"] = $area;
-			$series[$row["timestamp"]]["title_cumulative"] = "undefined";
-			$series[$row["timestamp"]]["text_cumulative"] = "undefined";
+
 		}		
 	}
 	//echo print_r($series, true)."<br />";
