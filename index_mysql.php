@@ -35,10 +35,10 @@ error_reporting(E_ALL);
 		$source = $_GET["source"];
 	}	
 
-        $cumulative = false;
-        if (isset($_GET["cumulative"]) && $_GET["cumulative"] == "1") {
-                $cumulative = true;
-        }
+    $cumulative = false;
+    if (isset($_GET["cumulative"]) && $_GET["cumulative"] == "1") {
+            $cumulative = true;
+    }
 
 	$lastRow = $maxRow = $minRow = null;
 	$avgTemp = 0;
@@ -104,6 +104,96 @@ error_reporting(E_ALL);
 		$events[strtotime($row["timestamp"])] = $row;
 	}
 	//echo print_r($events, true)."<br />";
+
+
+
+
+
+
+
+
+
+
+
+	$evKeys = array_keys($events);
+	$prevVal = null;
+	$prevTs = null;
+	$area = 0;
+
+	$series = array();
+
+	while($result !== false && $row = $result->fetch_array(MYSQLI_ASSOC)) :
+		$row["value"] = round($row["value"], 3);
+		if ($prevVal != null) {
+			$timeDiff = abs(strtotime($row["timestamp"]) - $prevTs);
+			$area1 = min($row["value"], $prevVal) * $timeDiff;
+			$area2 = abs($row["value"] - $prevVal) * $timeDiff / 2;
+			$area += ($area1 + $area2) / 3600;
+			#echo $row["value"]." prev ".$prevVal."  diff ".$timeDiff." area ".$area1." ".$area2."\n";
+		}		
+		$prevVal = $row["value"];
+		$prevTs = strtotime($row["timestamp"]);	
+
+		$title = $text = "undefined";
+		if (is_array($evKeys) && isset($evKeys[0])) {
+			$lastEventTime = 1*$evKeys[0];
+			
+			if ($lastEventTime <= strtotime($row["timestamp"]) && !isset($events[$evKeys[0]]["MAX"])) {
+				$events[$evKeys[0]]["MAX"] = strtotime($row["timestamp"]);
+				$title = $text = "undefined";
+                        }elseif ($lastEventTime > strtotime($row["timestamp"]) && isset($events[$evKeys[0]]["MAX"])) {
+				//echo print_r($row, true)." => ".print_r($events[$evKeys[0]], true)."<br />";
+				$title = "'".$events[$evKeys[0]]["category"]." HEATER'";
+				$text = ((1*$events[$evKeys[0]]["value"] == 0 || $events[$evKeys[0]]["value"] == 'ON')  ? "'ON'" : "'OFF'");
+				unset($events[$evKeys[0]]);
+				$evKeys = array_keys($events);
+			}else{
+				$title = $text = "undefined";
+			}
+			
+		}
+		
+
+		$totalNum++;
+		if ($lastRow == null) {
+			$lastRow = $row;
+		}
+		$pattern = "/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/";
+		$matches = array();
+
+		$date  =  substr($row["timestamp"], 0, 10);
+
+
+
+		if (($date == date("Y-m-d")) && ($minRow == null || 1*$row["value"] < 1*$minRow["value"])) {
+			$minRow = $row;
+		}
+        if (($date == date("Y-m-d")) && ($maxRow == null || 1*$row["value"] > 1*$maxRow["value"])) {
+                $maxRow = $row;
+        }
+		if ($date == date("Y-m-d")) {
+			$avgTemp += 1*$row["value"];
+			$avgTempNum++;
+		}
+		preg_match($pattern, $row["timestamp"], $matches);
+		if ($calcAvg) {
+			if (count($mobAvg) >= $avgNum) {
+				$keys = array_keys($mobAvg);
+				unset($mobAvg[$keys[0]]);
+			}
+			$mobAvg[] = 1*$row["value"];
+			$row["value"] = array_sum($mobAvg) / count($mobAvg);
+		}
+
+		$series[$row["timestamp"]] = array("date" => array($matches[1], $matches[2], $matches[3], $matches[4], $matches[5], $matches[6]), "value" => $row["value"], "title" => $title, "text" => $text);
+		if ($cumulative) {
+			$series[$row["timestamp"]]["cumulative"] = $area;
+			$series[$row["timestamp"]]["title_cumulative"] = "undefined";
+			$series[$row["timestamp"]]["text_cumulative"] = "undefined";		
+		}
+	endwhile;
+
+	echo print_r($series, true)."<br />";
 ?>
 <html>
   <head>
@@ -126,7 +216,9 @@ error_reporting(E_ALL);
 <?php
 	endif;
 ?>
-        data.addRows([
+
+		data.addRows([
+
 <?php
 	$evKeys = array_keys($events);
 	$prevVal = null;
