@@ -122,7 +122,7 @@ error_reporting(E_ALL);
 
 	$series = array();
 
-	while($result !== false && $row = $result->fetch_array(MYSQLI_ASSOC)) :
+	while($result !== false && $row = $result->fetch_array(MYSQLI_ASSOC)) {
 		$row["value"] = round($row["value"], 3);
 		if ($prevVal != null) {
 			$timeDiff = abs(strtotime($row["timestamp"]) - $prevTs);
@@ -191,8 +191,45 @@ error_reporting(E_ALL);
 			$series[$row["timestamp"]]["title_cumulative"] = "undefined";
 			$series[$row["timestamp"]]["text_cumulative"] = "undefined";		
 		}
-	endwhile;
+	}
+	$avgTemp /= $avgTempNum;
 
+
+    $lastRow["ago"] = time() - strtotime($lastRow["timestamp"]);
+    $lastRow["timeUnit"] = "secs";
+    if ($lastRow["ago"] > 60) {
+            $lastRow["ago"] /= 60;
+            $lastRow["timeUnit"] = "mins";
+    }
+    if ($lastRow["ago"] > 60) {
+            $lastRow["ago"] /= 60;
+            $lastRow["timeUnit"] = "hr";
+    }
+
+
+	$maxRow["ago"] = time() - strtotime($maxRow["timestamp"]);
+	$maxRow["timeUnit"] = "secs";
+	if ($maxRow["ago"] > 60) {
+		$maxRow["ago"] /= 60;
+		$maxRow["timeUnit"] = "mins";
+	}
+    if ($maxRow["ago"] > 60) {
+            $maxRow["ago"] /= 60;
+            $maxRow["timeUnit"] = "hr";
+    }
+
+    $minRow["ago"] = time() - strtotime($minRow["timestamp"]);
+    $minRow["timeUnit"] = "secs";
+    if ($minRow["ago"] > 60) {
+            $minRow["ago"] /= 60;
+            $minRow["timeUnit"] = "mins";
+    }
+    if ($minRow["ago"] > 60) {
+            $minRow["ago"] /= 60;
+            $minRow["timeUnit"] = "hr";
+    }
+	
+	ksort($seriers);
 	echo print_r($series, true)."<br />";
 ?>
 <html>
@@ -220,6 +257,21 @@ error_reporting(E_ALL);
 		data.addRows([
 
 <?php
+		foreach($series as $timestamp => $row) :
+?>
+[new Date(<?=$row["date"][0]?>, <?=$row["date"][1]?> ,<?=$row["date"][2]?>, <?=$row["date"][3]?>, <?=$row["date"][4]?>, <?=$row["date"][5]?>),
+          <?=$row["value"]?>, <?=$row["title"]?>, <?=$row["text"]?>
+<?php
+			if ($cumulative) :
+?>
+		,<?=$row["cumulative"]?>, undefined, undefined
+<?php		
+			endif;
+?>
+		],
+<?php
+		endforeach;
+/*
 	$evKeys = array_keys($events);
 	$prevVal = null;
 	$prevTs = null;
@@ -303,6 +355,7 @@ error_reporting(E_ALL);
 		],
 <?php
 	endwhile;
+	
 	$avgTemp /= $avgTempNum;
 
 
@@ -339,6 +392,7 @@ error_reporting(E_ALL);
                 $minRow["ago"] /= 60;
                 $minRow["timeUnit"] = "hr";
         }
+*/
 ?>
         ]);
 	var options = {
