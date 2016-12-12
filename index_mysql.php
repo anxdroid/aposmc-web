@@ -20,10 +20,10 @@ error_reporting(E_ALL);
 	if (isset($_GET["avgNum"]) && (1*$_GET["avgNum"] > 0)) {
                 $avgNum = 1*$_GET["avgNum"];
         }
-    $calcAvg = true;
-    if (isset($_GET["calcAvg"]) && (1*$_GET["calcAvg"] == 0)) {
+	$calcAvg = true;
+	if (isset($_GET["calcAvg"]) && (1*$_GET["calcAvg"] == 0)) {
             $calcAvg = false;
-    }
+	}
 	$from = date("Y-m-d");
 	if (isset($_GET["from"]) && $_GET["from"] != "") {
 		$from = $_GET["from"];
@@ -34,6 +34,11 @@ error_reporting(E_ALL);
 	if (isset($_GET["source"]) && $_GET["source"] != "") {
 		$source = $_GET["source"];
 	}	
+
+        $cumulative = false;
+        if (isset($_GET["cumulative"]) && $_GET["cumulative"] == "1") {
+                $cumulative = true;
+        }
 
 	$lastRow = $maxRow = $minRow = null;
 	$avgTemp = 0;
@@ -85,7 +90,7 @@ error_reporting(E_ALL);
 /* Events query
 /***************************/
 
-	$sql = "SELECT e.* FROM events e WHERE (category='CMDSRV' OR category = 'JOBSRV') AND key='RELAY'";
+	$sql = "SELECT e.* FROM events e WHERE (category='CMDSRV' OR category = 'JOBSRV') AND (cmd = 'HEATERS' OR cmd = 'RELAY')";
 	if ($from !== null) {
 		$sql .= " AND timestamp >= '".$from." 00:00:00'";
 	}
@@ -109,15 +114,40 @@ error_reporting(E_ALL);
       function drawChart() {
         var data = new google.visualization.DataTable();
         data.addColumn('date', 'Ora');
-        data.addColumn('number', 'Temp');
+        data.addColumn('number', 'Value');
         data.addColumn('string', 'Title');
         data.addColumn('string', 'Text');
+<?php
+	if ($cumulative) :
+?>
+        data.addColumn('number', 'Cumulative');
+        data.addColumn('string', 'Title Cumulative');
+        data.addColumn('string', 'Text Cumulative');
+<?php
+	endif;
+?>
         data.addRows([
 <?php
 	$evKeys = array_keys($events);
+	$prevVal = null;
+	$prevTs = null;
+	$area = 0;
 	while($result !== false && $row = $result->fetch_array(MYSQLI_ASSOC)) :
 		$row["value"] = round($row["value"], 3);
 		
+
+		if ($prevVal != null) {
+			$timeDiff = abs(strtotime($row["timestamp"]) - $prevTs);
+			$area1 = min($row["value"], $prevVal) * $timeDiff;
+			$area2 = abs($row["value"] - $prevVal) * $timeDiff / 2;
+			$area += ($area1 + $area2) / 3600;
+			#echo $row["value"]." prev ".$prevVal."  diff ".$timeDiff." area ".$area1." ".$area2."\n";
+		}		
+		$prevVal = $row["value"];
+		$prevTs = strtotime($row["timestamp"]);	
+		
+
+
 		$title = $text = "undefined";
 		if (is_array($evKeys) && isset($evKeys[0])) {
 			$lastEventTime = 1*$evKeys[0];
@@ -128,7 +158,7 @@ error_reporting(E_ALL);
                         }elseif ($lastEventTime > strtotime($row["timestamp"]) && isset($events[$evKeys[0]]["MAX"])) {
 				//echo print_r($row, true)." => ".print_r($events[$evKeys[0]], true)."<br />";
 				$title = "'".$events[$evKeys[0]]["category"]." HEATER'";
-				$text = (1*$events[$evKeys[0]]["value"] == 0 ? "'ON'" : "'OFF'");
+				$text = ((1*$events[$evKeys[0]]["value"] == 0 || $events[$evKeys[0]]["value"] == 'ON')  ? "'ON'" : "'OFF'");
 				unset($events[$evKeys[0]]);
 				$evKeys = array_keys($events);
 			}else{
@@ -170,7 +200,15 @@ error_reporting(E_ALL);
 		}
 ?>
           [new Date(<?=$matches[1]?>, <?=$matches[2]?> ,<?=$matches[3]?>, <?=$matches[4]?>, <?=$matches[5]?>, <?=$matches[6]?>),
-          <?=$row["value"]?>, <?=$title?>, <?=$text?>],
+          <?=$row["value"]?>, <?=$title?>, <?=$text?>
+<?php
+	if ($cumulative) :
+?>
+		,<?=$area?>, undefined, undefined
+<?php		
+	endif;
+?>
+		],
 <?php
 	endwhile;
 	$avgTemp /= $avgTempNum;
