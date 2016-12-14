@@ -55,7 +55,9 @@ error_reporting(E_ALL);
 	$sql = "SELECT value, timestamp, unit
 		FROM sensors
 		WHERE value IS NOT NULL
-		AND source = '".$source."'";
+		AND source = '".$source."'
+		AND (timestamp like '%__:__:0_%' OR timestamp like '%__:__:3_%' 
+		OR timestampdiff(SECOND, timestamp, now()) < 10 )";
 	if ($from !== null) {
 		$sql .= " AND timestamp >= '".$from." 00:00:00'";
 	}
@@ -66,11 +68,11 @@ error_reporting(E_ALL);
 		$sql .= " LIMIT 0, ".$numSamples;
 	}
 
-	//echo $sql."<hr />";
+	echo $sql."<hr />";
 	$result = $db->query($sql);
 
 /***************************/
-/* Temperature query
+/* Sensors query
 /***************************/
 
 	$sql = "SELECT source, MAX(timestamp) timestamp
