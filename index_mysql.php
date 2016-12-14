@@ -467,6 +467,7 @@ error_reporting(E_ALL);
 		echo "Server PID: ".$row[1]." started at ".$row[8]."<hr />";
 	}
 ?>  
+Welcome master <?=print_r($_SERVER["PHP_AUTH_USER"], true)?>!<hr />
 <table>
 <tr>
 <td>
@@ -501,7 +502,7 @@ Sensor
 	//unset($_GET["source"]);
 	$params = "";
 	foreach($_GET as $k => $v) {
-		if ($k != "source") {
+		if ($k != "source" && $k != "cumulative") {
 			if ($params != "") {
 				$params .= "&";
 			}
@@ -510,7 +511,8 @@ Sensor
 	}
 	foreach($sources as $mysource => $mytimestamp) :
 ?>
-		<a href="<?=$_SERVER['PHP_SELF']?>?<?=$params?>&amp;source=<?=$mysource?>"><span style="<?php if ($mysource == $source) : ?> font-weight: bold<?php endif; ?>"><?=$mysource?></span></a><br />
+		<a href="<?=$_SERVER['PHP_SELF']?>?<?=$params?>&amp;source=<?=$mysource?>&amp;cumulative=0"><span style="<?php if ($mysource == $source) : ?> font-weight: bold<?php endif; ?>"><?=$mysource?></span></a>
+(<a href="<?=$_SERVER['PHP_SELF']?>?<?=$params?>&amp;source=<?=$mysource?>&amp;cumulative=1">With Cumulative</a>)<br />
 <?php
 	endforeach;
 ?>
