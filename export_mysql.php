@@ -30,8 +30,8 @@ error_reporting(E_ALL);
 /* Temperature query
 /***************************/
 
-        $sql["sensors"] = "SELECT value, timestamp, source, unit FROM sensors 
-WHERE value >= 0 AND source = '".$source."' 
+        $sql["sensors"] = "SELECT value, timestamp, sensor as source, unit FROM sensors 
+WHERE value >= 0 AND sensor = '".$source."' 
 AND timestamp > '".$from."'
 AND (timestamp like '____-__-__ __:_0:__' OR TIMESTAMPDIFF(SECOND, timestamp, NOW()) < 10)";
 
@@ -67,8 +67,8 @@ AND (timestamp like '____-__-__ __:_0:__' OR TIMESTAMPDIFF(SECOND, timestamp, NO
 		$result = $db->query($sql);
 	        $info = array();
 	        while ($result !== false && $row = $result->fetch_array(MYSQLI_ASSOC)) {
-        	        //$info[strtotime($row["timestamp"])] = $row;
-			$info[] = $row;
+        	       //$info[strtotime($row["timestamp"])] = $row;
+				$info[] = $row;
 	        }
         	$info = json_encode(array("data" => $info));
 	        echo ($compress) ? gzcompress($info) : $info;

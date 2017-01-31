@@ -55,7 +55,7 @@ error_reporting(E_ALL);
 	$sql = "SELECT value, timestamp, unit
 		FROM sensors
 		WHERE value IS NOT NULL
-		AND source = '".$source."'
+		AND sensor = '".$source."'
 		AND (timestamp like '%__:__:0_%' OR timestamp like '%__:__:3_%' 
 		OR timestampdiff(SECOND, timestamp, now()) < 10 )";
 	if ($from !== null) {
@@ -75,10 +75,10 @@ error_reporting(E_ALL);
 /* Sensors query
 /***************************/
 
-	$sql = "SELECT source, MAX(timestamp) timestamp
+	$sql = "SELECT sensor as source, MAX(timestamp) timestamp
 		FROM sensors
 		WHERE value IS NOT NULL
-		GROUP BY source";
+		GROUP BY sensor";
 
 	echo $sql."<hr />";
 	$sourcesResult = $db->query($sql);

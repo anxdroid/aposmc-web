@@ -21,13 +21,25 @@ error_reporting(E_ALL);
 		//echo $sql."<br />";
 		$db->query($sql);
 	}
+	if (isset($_GET["job_id"]) && (1*$_GET["job_id"] > 0)) {
+		$sql = "UPDATE jobs SET status = 2, ip = '".$_SERVER["REMOTE_ADDR"]."', ended = NOW() WHERE id = ".(1*$_GET["job_id"]);
+                //echo $sql."<br />";
+                $db->query($sql);	
+	}
 /***************************/
 /* Jobs query
 /***************************/
 	$sql = array();
 
-	$sql["jobs"] = "SELECT e.*, timestamp FROM jobs e WHERE cmd IS NOT NULL ORDER BY timestamp DESC";
-
+	$sql["jobs"] = "SELECT e.*, timestamp FROM jobs e WHERE cmd IS NOT NULL";
+	if (isset($_GET["req_cmd"]) && ($_GET["req_cmd"] != "")) {
+		$sql["jobs"] .= " AND cmd LIKE '".trim($_GET["req_cmd"])."%' AND status = 0";
+	}
+	$sql["jobs"] .= " ORDER BY timestamp DESC";
+	if (isset($_GET["req_cmd"]) && ($_GET["req_cmd"] != "")) {
+		$sql["jobs"] .= " LIMIT 0, 1";
+		//echo $sql["jobs"]."<br />";
+	}
 /***************************/
 /* Output
 /***************************/
@@ -46,7 +58,19 @@ error_reporting(E_ALL);
 				//$info[strtotime($row["timestamp"])] = $row;
 				$info[] = $row;
 	        }
-        	$info = json_encode(array("data" => $info));
-	        echo ($compress) ? gzcompress($info) : $info;
+		$out = "";
+		if (isset($_GET["simple_out"]) && (1*$_GET["simple_out"] == 1)) {
+			foreach($info as $row) {
+				$out .= $row["id"]." ".$row["cmd"]."\n";
+			}
+		}else{
+        		$out = json_encode(array("data" => $info));
+		}
+	        echo ($compress) ? gzcompress($out) : $out;
+		if (count($info) == 1 && isset($_GET["req_cmd"]) && ($_GET["req_cmd"] != "")) {
+			$sql = "UPDATE jobs SET status = 1, ip = '".$_SERVER["REMOTE_ADDR"]."', started = NOW() WHERE id = ".(1*$info[0]["id"]);
+                	$db->query($sql);
+			//echo $sql."<br />";
+		}
 	}
 ?>
