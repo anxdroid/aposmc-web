@@ -11,7 +11,7 @@ error_reporting(E_ALL);
 		//echo 'Connesso. ' . $db->host_info . "\n";
 	}
 /***************************/
-/* INIT
+/* Scritture
 /***************************/
 	$compress = false;
     $cmd = "";
@@ -24,10 +24,21 @@ error_reporting(E_ALL);
 	if (isset($_GET["job_id"]) && (1*$_GET["job_id"] > 0)) {
 		$sql = "UPDATE jobs SET status = 2, ip = '".$_SERVER["REMOTE_ADDR"]."', ended = NOW() WHERE id = ".(1*$_GET["job_id"]);
                 //echo $sql."<br />";
-                $db->query($sql);	
+                $db->query($sql);
+		$sql = "SELECT * FROM jobs WHERE id = ".(1*$_GET["job_id"]);	
+		//echo $sql."<br />";
+		$result = $db->query($sql) or trigger_error($mysqli->error."[$sql]");
+                //var_dump($result);
+		if ($result !== false)
+		while ($row = $result->fetch_assoc()) {
+			$cmd = explode(":", $row["cmd"]);
+			$sql = "INSERT INTO events (id, timestamp, category, cmd, value, source, params) VALUES ('', NOW(), '".(isset($_GET["source"]) ? $_GET["source"] : "EXTERNAL")."', '".$cmd[0]."', '".$cmd[1]."', '".$_SERVER["REMOTE_ADDR"]."', '{}')";
+			//echo $sql."<br />";
+			$db->query($sql);
+		}
 	}
 /***************************/
-/* Jobs query
+/* Letture
 /***************************/
 	$sql = array();
 

@@ -68,7 +68,7 @@ error_reporting(E_ALL);
 		$sql .= " LIMIT 0, ".$numSamples;
 	}
 
-	echo $sql."<hr />";
+	//echo $sql."<hr />";
 	$result = $db->query($sql);
 
 /***************************/
@@ -80,7 +80,7 @@ error_reporting(E_ALL);
 		WHERE value IS NOT NULL
 		GROUP BY sensor";
 
-	echo $sql."<hr />";
+	//echo $sql."<hr />";
 	$sourcesResult = $db->query($sql);
 	$sources = array();
 	while($row = $sourcesResult->fetch_array(MYSQLI_ASSOC)) {
@@ -92,14 +92,14 @@ error_reporting(E_ALL);
 /* Events query
 /***************************/
 
-	$sql = "SELECT e.* FROM events e WHERE (category='CMDSRV' OR category = 'JOBSRV') AND (cmd = 'HEATERS' OR cmd = 'RELAY')";
+	$sql = "SELECT e.* FROM events e WHERE (category='CMDSRV' OR category = 'JOBSRV' OR category = 'EXTERNAL') AND (cmd = 'HEATERS' OR cmd = 'RELAY')";
 	if ($from !== null) {
 		$sql .= " AND timestamp >= '".$from." 00:00:00'";
 	}
 
 	$sql .= " ORDER BY timestamp DESC";
 
-	echo $sql."<hr />";
+	//echo $sql."<hr />";
 	$evResult = $db->query($sql);
 	$events = array();
 	while($evResult !== false && $row = $evResult->fetch_array(MYSQLI_ASSOC)) {

@@ -16,7 +16,6 @@ error_reporting(E_ALL);
 	$compress = false;
     $cmd = "";
 	if (isset($_GET["sensor"]) && ($_GET["sensor"] != "")) {
-		$cmd = urldecode($_GET["cmd"]);
 		$sql = "INSERT INTO sensors (timestamp, value, sensor, unit, source) VALUES (NOW(), '".(1*$_GET["value"])."', '".($_GET["sensor"])."', '".($_GET["unit"])."', '".$_SERVER["REMOTE_ADDR"]."')";
 		//echo $sql."<br />";
 		$db->query($sql);
