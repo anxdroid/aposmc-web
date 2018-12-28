@@ -1,0 +1,68 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "gestione temosifoni",
+            "intents": [
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "Accensione",
+                    "slots": [],
+                    "samples": [
+                        "Ho freddo"
+                    ]
+                },
+                {
+                    "name": "Temperatura",
+                    "slots": [
+                        {
+                            "name": "stanza",
+                            "type": "Stanza"
+                        }
+                    ],
+                    "samples": [
+                        "Quanto fa freddo in {stanza}"
+                    ]
+                },
+                {
+                    "name": "Spegnimento",
+                    "slots": [],
+                    "samples": [
+                        "Ho caldo"
+                    ]
+                }
+            ],
+            "types": [
+                {
+                    "name": "Stanza",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "disimpegno"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "salotto"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
