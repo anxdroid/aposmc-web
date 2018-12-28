@@ -16,7 +16,6 @@ $feedUrl = "http://192.168.1.9/emoncms/feed/timevalue.json";
 if ($_SERVER["SERVER_NAME"] == "aphost.altervista.org") {
 	$feedUrl = "http://antopaoletti.ddns.net:10280/emoncms/feed/timevalue.json";
 }
-
 $apiKey = "a7441c2c34fc80b6667fdb1717d1606f";
 
 $verbs = array(
@@ -27,7 +26,7 @@ $verbs = array(
 $feeds = array (
 	"disimpegno" => array("nome" => "disimpegno", "articolo" => "nel", "unit" => "gradi", "feed" => 10, "verbs" => $verbs["temp"]),
 	"salotto" => array("nome" => "salotto", "articolo" => "in", "unit" => "gradi", "feed" => 12, "verbs" => $verbs["temp"]),
-	"produzione" => array("nome" => "produzione", "articolo" => "la", "unit" => "KWH", "feed" => 2, "verbs" => $verbs["solar"])
+	"produzione" => array("nome" => "produzione", "articolo" => "la", "unit" => "kilowatt ora", "feed" => 2, "verbs" => $verbs["solar"])
 );
 /*****************************************/
 // ATTUAZIONE
@@ -49,37 +48,43 @@ if (isset($request["intent"])) {
 			$feedInfo = $feeds[$value]; 
 			$feedId = $feedInfo["feed"];
 			$url = $feedUrl."?id=".$feedId."&apikey=".$apiKey;
+			//echo $url."\n";
 			$feedDataArray = json_decode(file_get_contents($url), true);
 			
 			if (isset($feedDataArray["value"])) {
 				$timeDiff = time() - 1*$feedDataArray["time"];
+				$feedValue = round($feedDataArray["value"], 0);
 				
-				$timeUnit = "secondi";
-				$adesso = false;
-				$verb = $feedInfo["verbs"]["prima"];
-				if ($timeDiff < 30) {
-					$verb = $feedInfo["verbs"]["adesso"];
-					$adesso = true;
-				}
-				if ($timeDiff > 60) {
-					$timeDiff /= 60;
-					$timeUnit = "minuti";
-					if ($timeDiff < 2) {
-						$timeUnit = "minuto";
+				if ($feedValue > 0) {
+					$timeUnit = "secondi";
+					$adesso = false;
+					$verb = $feedInfo["verbs"]["prima"];
+					if ($timeDiff < 30) {
+						$verb = $feedInfo["verbs"]["adesso"];
+						$adesso = true;
 					}
-				}
-				if ($timeDiff > 60) {
-					$timeDiff /= 60;
-					$timeUnit = "ore";
-					if ($timeDiff < 2) {
-						$timeUnit = "ora";
+					if ($timeDiff > 60) {
+						$timeDiff /= 60;
+						$timeUnit = "minuti";
+						if ($timeDiff < 2) {
+							$timeUnit = "minuto";
+						}
 					}
-				}
-				$timeDiff = round($timeDiff, 0);
-				$shouldEndSession = "false";
+					if ($timeDiff > 60) {
+						$timeDiff /= 60;
+						$timeUnit = "ore";
+						if ($timeDiff < 2) {
+							$timeUnit = "ora";
+						}
+					}
+					$timeDiff = round($timeDiff, 0);
+					$shouldEndSession = "false";
 
-				$response = ucfirst($feedInfo["articolo"])." ".$feedInfo["nome"].((!$adesso) ? ", ".$timeDiff." ".$timeUnit." fa," : "")." ".$verb." ".$feedDataArray["value"]." ".$feedInfo["unit"];
-				file_put_contents("./log.txt", print_r($response, true));	
+					$response = ucfirst($feedInfo["articolo"])." ".$feedInfo["nome"].((!$adesso) ? ", ".$timeDiff." ".$timeUnit." fa," : "")." ".$verb." ".$feedValue." ".$feedInfo["unit"];
+					file_put_contents("./log.txt", print_r($response, true));	
+				}else{
+					$response = "Valore non valido per ".$value." !";
+				}
 			}else{
 				$response = "Valori non presenti per ".$value." !";
 			}
