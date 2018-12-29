@@ -3,51 +3,101 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-$request = file_get_contents('php://input');
-file_put_contents("./log.txt", print_r($request, true));
-$reqarray = json_decode($request, true);
-$request = $reqarray["request"];
-//file_put_contents("./log.txt", print_r($request, true));
+$reqArray = json_decode(file_get_contents('php://input'), true);
+$request = $reqArray["request"];
+$log = print_r($request, true)."\n";
 /*****************************************/
 // CONFIGURAZIONE
 /*****************************************/
-$feedUrl = "http://192.168.1.9/emoncms/feed/timevalue.json";
-//echo print_r($_SERVER, true);
+$baseUrl = "http://anto:resistore@192.168.1.9/";
 if ($_SERVER["SERVER_NAME"] == "aphost.altervista.org") {
-	$feedUrl = "http://antopaoletti.ddns.net:10280/emoncms/feed/timevalue.json";
+	$baseUrl = "http://anto:resistore@antopaoletti.ddns.net:10280/";
 }
+
+$feedUrl = $baseUrl."emoncms/feed/timevalue.json";
+//echo print_r($_SERVER, true);
 $apiKey = "a7441c2c34fc80b6667fdb1717d1606f";
+
+$jobsUrl = $baseUrl."temp/jobs.php";
 
 $verbs = array(
 	"temp" => array("adesso" => "ci sono", "prima" => "c'erano"),
 	"solar" => array("adesso" => "ammonta a", "prima" => "ammontava a")
 );
 
+$cmds = array(
+	"accensione" => array("cmd" => "HEATERS:ON", "response" => "Termosifoni accesi !"),
+	"spegnimento" => array("cmd" => "HEATERS:OFF", "response" => "Termosifoni spenti !")
+);
+
 $feeds = array (
 	"disimpegno" => array("nome" => "disimpegno", "articolo" => "nel", "unit" => "gradi", "feed" => 10, "verbs" => $verbs["temp"]),
 	"salotto" => array("nome" => "salotto", "articolo" => "in", "unit" => "gradi", "feed" => 12, "verbs" => $verbs["temp"]),
-	"produzione" => array("nome" => "produzione", "articolo" => "la", "unit" => "kilowatt ora", "feed" => 2, "verbs" => $verbs["solar"])
+	"produzione" => array("nome" => "produzione", "articolo" => "la", "unit" => "kilowatt ora", "feed" => 2, "verbs" => $verbs["solar"]),
+	"consumo" => array("nome" => "consumo", "articolo" => "il", "unit" => "kilowatt ora", "feed" => 7, "verbs" => $verbs["solar"])
+
 );
 /*****************************************/
 // ATTUAZIONE
 /*****************************************/
 $feed = 0;
-$response = "Benvenuto in gestione termosifoni";
+$response = "Benvenuto in gestione casa";
 $shouldEndSession = "false";
+
+if ($request["type"] == "SessionEndedRequest") {
+	$response = "Arrivederci mentecatto";
+	$shouldEndSession = "true";
+}
+
 if (isset($request["intent"])) {
-	$value = "";
+	$feedName = "";
+	$cmdInfo = null;
 	$intent = $request["intent"];
+
+/*****************************************/
+// ANALISI INTENT
+/*****************************************/
+
+	$intentName = strtolower($intent["name"]);
+	if (isset($cmds[$intentName])) {
+		$cmdInfo = $cmds[$intentName];
+	}
+	if ($intent["name"] == "Consumo") {
+		$feedName = "consumo";
+	}
 	if ($intent["name"] == "Produzione") {
-		$value = "produzione";
+		$feedName = "produzione";
 	}
 	if ($intent["name"] == "Temperatura" && isset($intent["slots"]["stanza"])) {
-		$value = $intent["slots"]["stanza"]["value"];
+		$feedName = $intent["slots"]["stanza"]["value"];
 	}
-	if ($value != "") {
-		if (isset($feeds[$value])) {
-			$feedInfo = $feeds[$value]; 
+	if ($intent["name"] == "AMAZON.StopIntent") {
+		$response = "Arrivederci mentecatto";
+		$shouldEndSession = "true";
+	}
+
+/*****************************************/
+// COMANDI
+/*****************************************/
+	
+	if ($cmdInfo != null) {
+		$url = $jobsUrl."?cmd=".$cmdInfo["cmd"];
+		$log .= $url."\n";
+		$cmdResultArray = json_decode(file_get_contents($url), true);
+		$log .= print_r($cmdResultArray, true)."\n";
+		$response = $cmdInfo["response"];
+	}
+
+/*****************************************/
+// DATI
+/*****************************************/
+
+	if ($feedName != "") {
+		if (isset($feeds[$feedName])) {
+			$feedInfo = $feeds[$feedName]; 
 			$feedId = $feedInfo["feed"];
 			$url = $feedUrl."?id=".$feedId."&apikey=".$apiKey;
+			$log .= $url."\n";
 			//echo $url."\n";
 			$feedDataArray = json_decode(file_get_contents($url), true);
 			
@@ -80,26 +130,24 @@ if (isset($request["intent"])) {
 					$timeDiff = round($timeDiff, 0);
 					$shouldEndSession = "false";
 
-					$response = ucfirst($feedInfo["articolo"])." ".$feedInfo["nome"].((!$adesso) ? ", ".$timeDiff." ".$timeUnit." fa," : "")." ".$verb." ".$feedValue." ".$feedInfo["unit"];
-					file_put_contents("./log.txt", print_r($response, true));	
+					$response = ucfirst($feedInfo["articolo"])." ".$feedInfo["nome"].((!$adesso) ? ", ".$timeDiff." ".$timeUnit." fa," : "")." ".$verb." ".$feedValue." ".$feedInfo["unit"];	
 				}else{
-					$response = "Valore non valido per ".$value." !";
+					$response = "Valore non valido per ".$feedValue." !";
 				}
 			}else{
-				$response = "Valori non presenti per ".$value." !";
+				$response = "Valori non presenti per ".$feedValue." !";
 			}
 		}else{
-			$response = "Feed non trovato !";
+			$response = "Feed non trovato per ".$feedValue." !";
 		}
 	}
 }
 
+$log .= $response."\n";
+file_put_contents("./log.txt", $log);
 
 header('Content-Type: application/json;charset=UTF-8');
 header('Content-Length:');
-
-$url = "http://192.168.1.9/emoncms/feed/timevalue.json?id=".$feed."&apikey=a7441c2c34fc80b6667fdb1717d1606f";
-
 ?>{
   "version": "0.0.1",
   "sessionAttributes": {
@@ -120,4 +168,3 @@ $url = "http://192.168.1.9/emoncms/feed/timevalue.json?id=".$feed."&apikey=a7441
     "shouldEndSession": <?php echo $shouldEndSession; ?>
   }
 }
-
