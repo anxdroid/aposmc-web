@@ -1,4 +1,30 @@
 <?php
+function getTimeAndUnit($feedInfo, &$timeDiff, &$timeUnit, &$adesso, &$verb) {
+	$timeUnit = "secondi";
+	$adesso = false;
+	$verb = $feedInfo["verbs"]["prima"];
+	if ($timeDiff < 30) {
+		$verb = $feedInfo["verbs"]["adesso"];
+		$adesso = true;
+	}
+	if ($timeDiff > 60) {
+		$timeDiff /= 60;
+		$timeUnit = "minuti";
+		if ($timeDiff < 2) {
+			$timeUnit = "minuto";
+		}
+	}
+	if ($timeDiff > 60) {
+		$timeDiff /= 60;
+		$timeUnit = "ore";
+		if ($timeDiff < 2) {
+			$timeUnit = "ora";
+		}
+	}
+	$timeDiff = round($timeDiff, 0);	
+	return 0;
+}
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -27,14 +53,16 @@ $verbs = array(
 
 $cmds = array(
 	"accensione" => array("cmd" => "HEATERS:ON", "response" => "Termosifoni accesi !"),
-	"spegnimento" => array("cmd" => "HEATERS:OFF", "response" => "Termosifoni spenti !")
+	"spegnimento" => array("cmd" => "HEATERS:OFF", "response" => "Termosifoni spenti !"),
+	"stato" => array("cmd" => "", "response" => "")
 );
 
 $feeds = array (
 	"disimpegno" => array("nome" => "disimpegno", "articolo" => "nel", "unit" => "gradi", "feed" => 10, "verbs" => $verbs["temp"]),
 	"salotto" => array("nome" => "salotto", "articolo" => "in", "unit" => "gradi", "feed" => 12, "verbs" => $verbs["temp"]),
-	"produzione" => array("nome" => "produzione", "articolo" => "la", "unit" => "kilowatt ora", "feed" => 2, "verbs" => $verbs["solar"]),
-	"consumo" => array("nome" => "consumo", "articolo" => "il", "unit" => "kilowatt ora", "feed" => 7, "verbs" => $verbs["solar"])
+	"terrazzo" => array("nome" => "terrazzo", "articolo" => "sul", "unit" => "gradi", "feed" => 9, "verbs" => $verbs["temp"]),
+	"produzione" => array("nome" => "produzione", "articolo" => "la", "unit" => "kilowatt", "feed" => 1, "verbs" => $verbs["solar"]),
+	"consumo" => array("nome" => "consumo", "articolo" => "il", "unit" => "kilowatt", "feed" => 7, "verbs" => $verbs["solar"])
 
 );
 /*****************************************/
@@ -82,10 +110,24 @@ if (isset($request["intent"])) {
 	
 	if ($cmdInfo != null) {
 		$url = $jobsUrl."?cmd=".$cmdInfo["cmd"];
-		$log .= $url."\n";
-		$cmdResultArray = json_decode(file_get_contents($url), true);
-		$log .= print_r($cmdResultArray, true)."\n";
-		$response = $cmdInfo["response"];
+		if ($cmdInfo["cmd"] != null) {
+			$log .= $url."\n";
+			$cmdResultArray = json_decode(file_get_contents($url), true);
+			$log .= print_r($cmdResultArray, true)."\n";
+			if ($cmdInfo["response"] != "") {
+				$response = $cmdInfo["response"];
+			}else{
+				if ($intentName == "stato") {
+					/*
+					$timeDiff = time() - 1*$cmdResultArray["time"];
+					$timeUnit = $adesso = $verb = null;
+					getTimeAndUnit($feedInfo, $timeDiff, $timeUnit, $adesso, $verb);
+					$resonse = "";
+					*/
+					$resonse = "Stato termosifoni";
+				}
+			}
+		}
 	}
 
 /*****************************************/
@@ -105,7 +147,9 @@ if (isset($request["intent"])) {
 				$timeDiff = time() - 1*$feedDataArray["time"];
 				$feedValue = round($feedDataArray["value"], 0);
 				
+				
 				if ($feedValue > 0) {
+					/*
 					$timeUnit = "secondi";
 					$adesso = false;
 					$verb = $feedInfo["verbs"]["prima"];
@@ -128,6 +172,9 @@ if (isset($request["intent"])) {
 						}
 					}
 					$timeDiff = round($timeDiff, 0);
+					*/
+					$timeUnit = $adesso = $verb = null;
+					getTimeAndUnit($feedInfo, $timeDiff, $timeUnit, $adesso, $verb);
 					$shouldEndSession = "false";
 
 					$response = ucfirst($feedInfo["articolo"])." ".$feedInfo["nome"].((!$adesso) ? ", ".$timeDiff." ".$timeUnit." fa," : "")." ".$verb." ".$feedValue." ".$feedInfo["unit"];	
