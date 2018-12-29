@@ -48,13 +48,14 @@ $jobsUrl = $baseUrl."temp/jobs.php";
 
 $verbs = array(
 	"temp" => array("adesso" => "ci sono", "prima" => "c'erano"),
+	"termo" => array("adesso" => "sono", "prima" => "erano"),
 	"solar" => array("adesso" => "ammonta a", "prima" => "ammontava a")
 );
 
 $cmds = array(
-	"accensione" => array("cmd" => "HEATERS:ON", "response" => "Termosifoni accesi !"),
-	"spegnimento" => array("cmd" => "HEATERS:OFF", "response" => "Termosifoni spenti !"),
-	"stato" => array("cmd" => "", "response" => "")
+	"accensione" => array("cmd" => "HEATERS:ON", "response" => "Termosifoni accesi !", "verbs" => $verbs["termo"]),
+	"spegnimento" => array("cmd" => "HEATERS:OFF", "response" => "Termosifoni spenti !", "verbs" => $verbs["termo"]),
+	"stato" => array("cmd" => "", "response" => "", "verbs" => $verbs["termo"])
 );
 
 $feeds = array (
@@ -113,18 +114,19 @@ if (isset($request["intent"])) {
 		if ($cmdInfo["cmd"] != null) {
 			$log .= $url."\n";
 			$cmdResultArray = json_decode(file_get_contents($url), true);
+			$data = $cmdResultArray["data"][0];
+			$ended = $data["ended"];
+			$endedTS = strtotime($ended);
+			$cmd = $data["cmd"];
+			$timeDiff = time() - 1*$endedTS;
+			$timeUnit = $adesso = $verb = null;
+			getTimeAndUnit($feedInfo, $timeDiff, $timeUnit, $adesso, $verb);
 			$log .= print_r($cmdResultArray, true)."\n";
 			if ($cmdInfo["response"] != "") {
 				$response = $cmdInfo["response"];
 			}else{
 				if ($intentName == "stato") {
-					/*
-					$timeDiff = time() - 1*$cmdResultArray["time"];
-					$timeUnit = $adesso = $verb = null;
-					getTimeAndUnit($feedInfo, $timeDiff, $timeUnit, $adesso, $verb);
-					$resonse = "";
-					*/
-					$resonse = "Stato termosifoni";
+					$response = "I termosifoni".((!$adesso) ? ", ".$timeDiff." ".$timeUnit." fa," : "")." ".$verb." ".$cmd;	
 				}
 			}
 		}
