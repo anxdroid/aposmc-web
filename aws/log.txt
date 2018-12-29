@@ -1,15 +1,21 @@
-Array
-(
-    [type] => IntentRequest
-    [requestId] => amzn1.echo-api.request.04abceca-a119-495e-805e-1828a7d4ea82
-    [timestamp] => 2018-12-28T09:55:09Z
-    [locale] => it-IT
-    [intent] => Array
-        (
-            [name] => AMAZON.StopIntent
-            [confirmationStatus] => NONE
-        )
 
-)
-
-Arrivederci mentecatto
+{
+	"version": "0.0.1",
+	"sessionAttributes": {
+		"key": "value"
+	},
+	"response": {
+		"outputSpeech": {
+			"type": "PlainText",
+			"text": "Benvenuto in gestione casa, mentecatto",
+			"playBehavior": "REPLACE_ENQUEUED"
+		},
+		"card": {
+			"type": "Standard",
+			"title": "Gestione Casa A&V",
+			"content": "Benvenuto in gestione casa, mentecatto",
+			"text": "Benvenuto in gestione casa, mentecatto"
+		},
+		"shouldEndSession": false
+	}
+}
