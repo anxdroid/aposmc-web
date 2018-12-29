@@ -62,8 +62,8 @@ $apis = array (
 	"disimpegno" => array("nome" => "disimpegno", "articolo" => "nel", "unit" => "gradi", "feedId" => 10, "verbs" => $verbs["temp"], "system" => $systems["emoncms"]),
 	"salotto" => array("nome" => "salotto", "articolo" => "in", "unit" => "gradi", "feedId" => 12, "verbs" => $verbs["temp"], "system" => $systems["emoncms"]),
 	"terrazzo" => array("nome" => "terrazzo", "articolo" => "sul", "unit" => "gradi", "feedId" => 9, "verbs" => $verbs["temp"], "system" => $systems["emoncms"]),
-	"produzione" => array("nome" => "produzione", "articolo" => "la", "unit" => "kilowatt", "feedId" => 1, "verbs" => $verbs["solar"], "system" => $systems["emoncms"]),
-	"consumo" => array("nome" => "consumo", "articolo" => "il", "unit" => "kilowatt", "feedId" => 7, "verbs" => $verbs["solar"], "system" => $systems["emoncms"]),
+	"produzione" => array("nome" => "produzione", "articolo" => "la", "unit" => "watt", "feedId" => 1, "verbs" => $verbs["solar"], "system" => $systems["emoncms"]),
+	"consumo" => array("nome" => "consumo", "articolo" => "il", "unit" => "watt", "feedId" => 7, "verbs" => $verbs["solar"], "system" => $systems["emoncms"]),
 	"accensione" => array("cmd" => "HEATERS:ON", "device" => "i termosifoni", "verbs" => $verbs["termo"], "system" => $systems["termo"]),
 	"spegnimento" => array("cmd" => "HEATERS:OFF", "device" => "i termosifoni", "verbs" => $verbs["termo"], "system" => $systems["termo"]),
 	"stato" => array("cmd" => "", "response" => "", "device" => "i termosifoni", "verbs" => $verbs["termo"], "system" => $systems["termo"])
@@ -145,7 +145,13 @@ if ($request["type"] == "SessionEndedRequest") {
 			if ($feedValue > 0) {
 				$timeUnit = $adesso = $verb = null;
 				getTimeAndUnit($feedInfo, $timeDiff, $timeUnit, $adesso, $verb);
-				$response = ucfirst($feedInfo["articolo"])." ".$feedInfo["nome"].((!$adesso) ? ", ".$timeDiff." ".$timeUnit." fa," : "")." ".$verb." ".$feedValue." ".$feedInfo["unit"];	
+				$unit = $feedInfo["unit"];
+				if ($feedValue > 1000) {
+					$feedValue = round(($feedValue / 1000), 1);
+					$unit .= "kilo";
+				}
+
+				$response = ucfirst($feedInfo["articolo"])." ".$feedInfo["nome"].((!$adesso) ? ", ".$timeDiff." ".$timeUnit." fa," : "")." ".$verb." ".$feedValue." ".$unit;	
 				$shouldEndSession = "false";
 			}else{
 				$response = "Valore non valido per ".$feedInfo["nome"]." !";
